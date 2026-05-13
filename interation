@@ -144,5 +144,5 @@ filename = 'sonuc.xlsx';
 % Let's add a title
 header = {'Karsilastirma','Deger'};
 
-xlswrite(filename, header, 'Sayfa1', 'A1');
+xlswrite(filename, header, 'Sayfa1', 'A1'); 
 xlswrite(filename, data, 'Sayfa1', 'A2')

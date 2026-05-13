@@ -1,0 +1,143 @@
+function interation
+
+
+% INTERACTION
+% MATLAB implementation of Algorithms 1–2:
+% Interaction function and dominant parameter detection
+% for fuzzy soft sets.
+%
+% The script computes interaction matrices, dominant
+% parameters, and produces the figures used in the project.
+
+% Parameters as follows
+% Hasta_ID	
+% e1:Yas	
+% e2:RT_Bulgu (0:Benign, 1:Nodül)	
+% e3:tPSA	
+% e4:f_t_Orani (Free/Total PSA)	
+% e5:PSA_Dansitesi (Total PSA / Prostat Volum)	
+% e6:Prostat_Volum	
+% e7: PIRADS_Skor	
+% e8: klinik anlamli (low risk+ ≥3+4)
+% Since the e8 parameter produced a result, it was not included in the comparison in this program
+
+clc;clear all;
+
+%% Import the matrix from the Excel file
+A= xlsread('207_eksiksiz_hasta_fuzzy.xlsx', 'fuzziness', 'B2:H208');
+format short
+
+%% Compute interaction matrices
+[m n ]=size(A);% m U- n E leri temsil ediyor!
+for i=1:n
+    for j=1:n
+        gamma(i,j)=1-sum(abs(A(:,i)-A(:,j)))/m;
+    end
+end
+
+%% Remove diagonal elements (self-interaction)
+G=gamma-eye(n);
+
+
+%% Dominant interaction for each parameter
+for i=1:n
+    [R(i),In(i)]=max(G(i,:));
+end
+
+
+%% Pairwise interaction bar chart
+k=1;
+for i=1:n
+    
+   
+    for j=i+1:n
+        gr(k,1)=gamma(i,j);        
+        k=k+1;
+    end
+end
+PS=figure(1);
+grsize=size(gr);
+grsizex=1:grsize(1,1);
+b=bar(grsizex,gr);
+
+y = ylim;
+offset = 0.02*(y(2)-y(1));
+
+for i = 1:length(gr)
+    text(grsizex(i), gr(i)+offset, num2str(gr(i)), ...
+        'HorizontalAlignment','center')
+end
+
+ax=gca;
+
+set(ax,'XTick',1:length(grsizex))
+
+labels = {'e_1 - e_2';'e_1 - e_3';'e_1 - e_4';'e_1 - e_5';'e_1 - e_6';'e_1 - e_7';...
+    'e_2 - e_3';'e_2 - e_4'; 'e_2 - e_5'; 'e_2 - e_6'; 'e_2 - e_7';...
+    'e_3 - e_4';'e_3 - e_5';'e_3 - e_6';'e_3 - e_7';...
+    'e_4 - e_5';'e_4 - e_6';'e_4 - e_7';...
+    'e_5 - e_6';'e_5 - e_7';...
+    'e_6 - e_7'};
+
+set(ax,'XTickLabel',labels)
+
+xt = get(ax,'XTick');
+set(ax,'XTickLabel','')
+
+y = ylim;
+for i = 1:length(xt)
+    text(xt(i), y(1)-0.05*(y(2)-y(1)), labels{i}, ...
+        'Rotation',45, ...
+        'HorizontalAlignment','right')
+end
+set(gcf, 'Position', get(0,'Screensize')); % Maximize figure.
+print('fig_1.eps','-depsc')
+print('fig_1.jpg','-djpeg','-r300')   % 300 dpi
+saveas(figure(1),'fig_PS.fig')
+
+%% Let's show as a table
+
+f = figure(2);  % yeni pencere
+
+labels = {'e_1 - e_2';'e_1 - e_3';'e_1 - e_4';'e_1 - e_5';'e_1 - e_6';'e_1 - e_7';...
+    'e_2 - e_3';'e_2 - e_4'; 'e_2 - e_5'; 'e_2 - e_6'; 'e_2 - e_7';...
+    'e_3 - e_4';'e_3 - e_5';'e_3 - e_6';'e_3 - e_7';...
+    'e_4 - e_5';'e_4 - e_6';'e_4 - e_7';...
+    'e_5 - e_6';'e_5 - e_7';...
+    'e_6 - e_7'};
+
+data = [labels num2cell(gr)];
+
+uitable('Parent',f,...
+        'Data',data,...
+        'ColumnName',{'Karsilastirma','Deger'},...
+        'Position',[20 20 500 400]);
+%set(gcf, 'Position', get(0,'Screensize')); % Maximize figure.
+print('fig_2.eps','-depsc')
+print('fig_2.jpg','-djpeg','-r300')   % 300 dpi
+saveas(f,'fig_PS.fig')
+
+
+%% Save results
+format bank
+save interactionmat gamma  In
+load interactionmat.mat
+
+
+%% Print to Excel
+
+labels = {'e_1 - e_2';'e_1 - e_3';'e_1 - e_4';'e_1 - e_5';'e_1 - e_6';'e_1 - e_7';...
+    'e_2 - e_3';'e_2 - e_4'; 'e_2 - e_5'; 'e_2 - e_6'; 'e_2 - e_7';...
+    'e_3 - e_4';'e_3 - e_5';'e_3 - e_6';'e_3 - e_7';...
+    'e_4 - e_5';'e_4 - e_6';'e_4 - e_7';...
+    'e_5 - e_6';'e_5 - e_7';...
+    'e_6 - e_7'};
+data = [labels num2cell(gr)];
+
+filename = 'sonuc.xlsx';
+
+% Let's add a title
+header = {'Karsilastirma','Deger'};
+
+xlswrite(filename, header, 'Sayfa1', 'A1');
+xlswrite(filename, data, 'Sayfa1', 'A2')

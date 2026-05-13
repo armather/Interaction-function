@@ -24,6 +24,7 @@ function interation
 % Since the e9 parameter produced a result, it was not included in the comparison in this program
 
 clc;clear all;
+tStart=tic;
 
 %% Import the matrix from the Excel file
 A= xlsread('207_eksiksiz_hasta_fuzzy.xlsx', 'fuzziness', 'B2:I206');
@@ -97,23 +98,75 @@ end
 
 set(gca,'Position',[0.07 0.1 0.65 0.8])
 
-annotation('textbox',[0.75 0.5 0.2 0.3], ...
+annotation('textbox',[0.75 0.5 0.5 0.3], ...
 'String',{
-'e1: Yas',...
-'e2: RT_Bulgu (T1c=0-3)',...
-'e3: tPSA',...
-'e4: f/t Orani',...
-'e5: PSA Dansitesi',...
-'e6: Prostat Volum',...
-'e7: PIRADS Skor',...
+'e1: Yas';...
+'e2: RT Bulgu (T1c=0, T2a=1, T2b=2, T2c=3)';...
+'e3: tPSA';...
+'e4: f/t Orani (Free/Total PSA)';...
+'e5: PSA Dansitesi (Total PSA / Prostat Volum)';...
+'e6: Prostat Volum';...
+'e7: PIRADS Skor';...
 'e8: ISUP'}, ...
 'FitBoxToText','on');
-
+title('Parametrelerin karşılaştırılması')
 
 set(gcf, 'Position', get(0,'Screensize')); % Maximize figure.
 print('fig_1.eps','-depsc')
 print('fig_1.jpg','-djpeg','-r300')   % 300 dpi
 saveas(figure(1),'fig_PS.fig')
+
+
+
+%%
+figure(3)
+b2=bar(R);
+ax=gca;
+
+%set(ax,'XTick',1:length(grsizex))
+
+labels = {'e_1';'e_2';'e_3';'e_4';'e_5';'e_6';'e_7';'e_8'};
+
+set(ax,'XTickLabel',labels)
+
+xt = get(ax,'XTick');
+set(ax,'XTickLabel','')
+
+y = ylim;
+for i = 1:length(xt)
+    text(xt(i), y(1)-0.05*(y(2)-y(1)), labels{i}, ...
+        'Rotation',60, ...
+        'HorizontalAlignment','right')
+end
+
+set(gca,'Position',[0.07 0.1 0.65 0.8])
+
+annotation('textbox',[0.75 0.5 0.5 0.3], ...
+'String',{
+'e1: Yas';...
+'e2: RT Bulgu (T1c=0, T2a=1, T2b=2, T2c=3)';...
+'e3: tPSA';...
+'e4: f/t Orani (Free/Total PSA)';...
+'e5: PSA Dansitesi (Total PSA / Prostat Volum)';...
+'e6: Prostat Volum';...
+'e7: PIRADS Skor';...
+'e8: ISUP'}, ...
+'FitBoxToText','on');
+
+y = ylim;  
+offset = 0.01*(y(2)-y(1)); 
+for i = 1:length(R)
+    text(i, R(i) + offset, num2str(R(i),'%.4f'), ...
+        'HorizontalAlignment','center', ...
+        'FontSize',8);
+end
+title('Parametrelerin toplam ağırlığı')
+
+set(gcf, 'Position', get(0,'Screensize')); % Maximize figure.
+print('fig_3.eps','-depsc')
+print('fig_3.jpg','-djpeg','-r300')   % 300 dpi
+saveas(figure(3),'fig_3.fig')
+
 
 %% Let's show as a table
 
@@ -208,3 +261,33 @@ param_aciklama = {
 % Write on column D
 xlswrite(filename, {'Parametre Aciklamalari'}, 'Sayfa1', 'D1');
 xlswrite(filename, param_aciklama, 'Sayfa1', 'D2');
+
+
+
+% parameters e1–e8
+parametreler = {'e1';'e2';'e3';'e4';'e5';'e6';'e7';'e8'};
+
+[sorted_values, idx] = sort(R','descend');
+sorted_labels = parametreler(idx);
+data = [sorted_labels num2cell(sorted_values)];
+
+filename = 'sonuc.xlsx';
+
+% Let's add a title
+header = {'Parametre','Toplam Ağırlık Deger'};
+
+xlswrite(filename, header, 'Sayfa2', 'A1');
+xlswrite(filename, data, 'Sayfa2', 'A2')
+
+% Write on column E
+xlswrite(filename, {'Parametre Aciklamalari'}, 'Sayfa2', 'E1');
+xlswrite(filename, param_aciklama, 'Sayfa2', 'E2');
+elapsedTime = toc(tStart);
+
+
+
+minutes = floor(elapsedTime / 60);
+seconds = rem(elapsedTime, 60);
+
+fprintf('The program ran for %d minutes %.2f seconds.\n', minutes, seconds)
+
